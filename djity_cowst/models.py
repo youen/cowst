@@ -23,13 +23,12 @@ class Cowst(Module):
     objects = SuperManager()
 
     #use transmeta for international message
-    __metaclass__ = TransMeta
+    #__metaclass__ = TransMeta
     
-    message = models.CharField(max_length=200, default='Hello World !')
 
     class Meta:
         #specify that the field 'message' is translatable
-        translate = ('message',)
+        #translate = ('message',)
         
 
     def save(self,*args,**kwargs):
@@ -41,15 +40,15 @@ class Cowst(Module):
 
         super(Cowst,self).save(*args, **kwargs)
 
-        if new:
+        #if new:
             #A standard text portlet, its content will be automatically editable
-            TextPortlet(content=sanitize("This is a tab level text portlet edit me !"), container=self,position="left", rel_position=0).save()
+            #TextPortlet(content=sanitize("This is a tab level text portlet edit me !"), container=self,position="left", rel_position=0).save()
 
             # A standard template portlet, it will simply render a template
-            TemplatePortlet(template="djity_cowst/cowst_portlet.html",container=self,position="right",rel_position=0).save()
+            #TemplatePortlet(template="djity_cowst/cowst_portlet.html",container=self,position="right",rel_position=0).save()
 
             # A custom template defined in models.py of the application
-            CowstPortlet(container=self,position="right",rel_position=0).save()
+            #CowstPortlet(container=self,position="right",rel_position=0).save()
     
 
     def djity_url(self,context):
@@ -57,6 +56,35 @@ class Cowst(Module):
         return the application's start page
         """
         return djreverse('cowst-main',context)
+
+class Template(models.Model):
+	"""
+	A Wikipedia template
+	"""
+	#the dbpedia uri of the template
+	uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+	label = models.CharField(max_length=200,blank=True)
+    used_with = models.ManyToManyField(YagoClass, through='TemplateHistogram')
+
+
+
+class YagoClass(models.Model):
+	"""
+	A Yago Class
+	"""
+	#dbpedia uri of the YAGO class
+	uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+	label = models.CharField(max_length=200,blank=True)
+	parentClass = models.ForeignKey(YagoClass)
+
+class TemplateHistogram(models.Model):
+	"""
+	Howmany ressources of a Yago class used a specific template
+	"""
+	template = models.ForeignKey(Template)
+	yagoClass = models.ForeignKey(YagoClass)
+	count = models.PositiveIntegerField()
+
 
 class CowstPortlet(TemplatePortlet):
     def save(self,*args,**kwargs):
