@@ -64,7 +64,7 @@ class YagoClass(models.Model):
     #dbpedia uri of the YAGO class
     uri = models.CharField(max_length=200, primary_key=True, db_index=True)
     label = models.CharField(max_length=200,blank=True)
-    parentClass = models.ForeignKey('YagoClass')
+    parentClass = models.ForeignKey('self',blank=True,null=True)
 
 class Template(models.Model):
     """

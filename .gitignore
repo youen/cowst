@@ -1,0 +1,4 @@
+*.pyc
+*.swp
+
+djity_cowst.egg-info/

@@ -1,0 +1,12 @@
+{% extends "djity_cowst/cowst.html" %}
+
+{% block module_onload %}
+
+dj.widgets.cowst_import.init();
+{% endblock %}
+
+
+{% block body %}
+<p> Your project have no data. Do you want to load default data ?</p>
+<input type="file" id="file"  name="file" />
+{% endblock%}
