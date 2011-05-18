@@ -26,7 +26,7 @@ class Cowst(Module):
     #__metaclass__ = TransMeta
     
 
-    class Meta:
+    #class Meta:
         #specify that the field 'message' is translatable
         #translate = ('message',)
         
@@ -57,33 +57,33 @@ class Cowst(Module):
         """
         return djreverse('cowst-main',context)
 
-class Template(models.Model):
-	"""
-	A Wikipedia template
-	"""
-	#the dbpedia uri of the template
-	uri = models.CharField(max_length=200, primary_key=True, db_index=True)
-	label = models.CharField(max_length=200,blank=True)
-    used_with = models.ManyToManyField(YagoClass, through='TemplateHistogram')
-
-
-
 class YagoClass(models.Model):
-	"""
-	A Yago Class
-	"""
-	#dbpedia uri of the YAGO class
-	uri = models.CharField(max_length=200, primary_key=True, db_index=True)
-	label = models.CharField(max_length=200,blank=True)
-	parentClass = models.ForeignKey(YagoClass)
+    """
+    A Yago Class
+    """
+    #dbpedia uri of the YAGO class
+    uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+    label = models.CharField(max_length=200,blank=True)
+    parentClass = models.ForeignKey('YagoClass')
+
+class Template(models.Model):
+    """
+    A Wikipedia template
+    """
+    #the dbpedia uri of the template
+    uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+    label = models.CharField(max_length=200,blank=True)
+    used_with = models.ManyToManyField('YagoClass', through='TemplateHistogram')
+
+
 
 class TemplateHistogram(models.Model):
-	"""
-	Howmany ressources of a Yago class used a specific template
-	"""
-	template = models.ForeignKey(Template)
-	yagoClass = models.ForeignKey(YagoClass)
-	count = models.PositiveIntegerField()
+    """
+    Howmany ressources of a Yago class used a specific template
+    """
+    template = models.ForeignKey('Template')
+    yagoClass = models.ForeignKey('YagoClass')
+    count = models.PositiveIntegerField()
 
 
 class CowstPortlet(TemplatePortlet):
