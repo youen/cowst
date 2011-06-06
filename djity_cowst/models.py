@@ -62,19 +62,49 @@ class YagoClass(models.Model):
     A Yago Class
     """
     #dbpedia uri of the YAGO class
-    uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+    md5 = models.BigIntegerField( db_index=True, primary_key=True)
     label = models.CharField(max_length=200,blank=True)
-    parentClass = models.ForeignKey('self',blank=True,null=True)
+    parents = models.ManyToManyField('self', related_name='children')
+    
+    def __unicode__(self):
+        try:
+            return Dico.objects.get(code=self.md5).uri[1:-1]
+        except Dico.DoesNotExist:
+            return unicode(self.md5)
+
+
+class Dico(models.Model):
+    """
+    A Dico for md5 decoding
+    """
+    code = models.BigIntegerField(primary_key=True, db_index=True)
+    uri = models.CharField(max_length=255,  db_index=True)
+
+    def __unicode__(self):
+        return '%s -> %s'%(self.code, self.uri)
+    
+    class Meta:
+        unique_together = ('code','uri')
 
 class Template(models.Model):
     """
     A Wikipedia template
     """
     #the dbpedia uri of the template
-    uri = models.CharField(max_length=200, primary_key=True, db_index=True)
+    md5 = models.BigIntegerField(primary_key=True, db_index=True)
     label = models.CharField(max_length=200,blank=True)
-    used_with = models.ManyToManyField('YagoClass', through='TemplateHistogram')
+    used_with = models.ManyToManyField('YagoClass', through='TemplateHistogram', related_name='used_by_template')
+    alpha = models.ForeignKey('YagoClass',blank=True,null=True, related_name='alpha_class_of_template')
 
+    def __unicode__(self):
+        try:
+            return Dico.objects.get(code=self.md5).uri[1:-1]
+        except Dico.DoesNotExist:
+            return unicode(self.md5)
+
+    @property
+    def size(self):
+        return TemplateHistogram.objects.get(template =self, yagoClass = self.alpha).count
 
 
 class TemplateHistogram(models.Model):
@@ -82,8 +112,44 @@ class TemplateHistogram(models.Model):
     Howmany ressources of a Yago class used a specific template
     """
     template = models.ForeignKey('Template')
-    yagoClass = models.ForeignKey('YagoClass')
+    yago_class = models.ForeignKey('YagoClass')
     count = models.PositiveIntegerField()
+
+
+    class Meta:
+        unique_together = ('template','yago_class')
+
+class InfoboxProperty(models.Model):
+    """
+    A raw property of DBpedia
+    """
+
+    md5 = models.BigIntegerField(primary_key=True, db_index=True)
+    label = models.CharField(max_length=200,blank=True)
+    used_with = models.ManyToManyField('YagoClass', through='InfoboxPropertyHistogram', related_name='used_by_properties')
+    alpha = models.ForeignKey('YagoClass',blank=True,null=True, related_name='alpha_class_of_properties')
+
+    def __unicode__(self):
+        try:
+            return Dico.objects.get(code=self.md5).uri[1:-1]
+        except Dico.DoesNotExist:
+            return unicode(self.md5)
+
+    @property
+    def size(self):
+        return InfoboxPropertyHistogram.objects.get(infobox_property =self, yago_class = self.alpha).count
+
+class InfoboxPropertyHistogram(models.Model):
+    """
+    How many ressources of a Yago class used a specific infobox property
+    """
+    infobox_property = models.ForeignKey('InfoboxProperty')
+    yago_class = models.ForeignKey('YagoClass')
+    count = models.PositiveIntegerField()
+    sample = models.ManyToManyField('Instance')
+
+    class Meta:
+        unique_together = ('infobox_property','yago_class')
 
 
 class CowstPortlet(TemplatePortlet):
@@ -97,4 +163,20 @@ class CowstPortlet(TemplatePortlet):
             self.onload = "$('.cowst-load-portlet').cowst_widget();" 
             self.template = "djity_cowst/cowst_portlet2.html"
             super(CowstPortlet,self).save(*args, **kwargs)
+
+class Instance(models.Model):
+    """
+    A DBpedia Instance
+    """
+    #dbpedia uri of the YAGO class
+    md5 = models.BigIntegerField( db_index=True, primary_key=True)
+    label = models.CharField(max_length=200,blank=True)
+    rank = models.FloatField()
+    
+    def __unicode__(self):
+        try:
+            return Dico.objects.get(code=self.md5).uri[1:-1]
+        except Dico.DoesNotExist:
+            return unicode(self.md5)
+
 
